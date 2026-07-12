@@ -207,12 +207,22 @@ const dragSrc = `(async () => {
   bar.dispatchEvent(new PointerEvent('pointerup', opts(bx - 140, by + 90)));
   await sleep(50);
   const r1 = panel.getBoundingClientRect();
-  title.click(); // collapse (must NOT fire from the drag above, only from this)
-  await sleep(50);
+  // Collapse via a REAL pointer press (down+up, no synthetic .click()): the
+  // drag handler preventDefaults pointerdown, which suppresses native clicks,
+  // so the toggle must work from the pointer path itself. A .click()-based
+  // test passed while actual mouse clicks did nothing — never again.
+  const pclick = () => {
+    const tr = title.getBoundingClientRect();
+    const x = tr.left + 8, y = tr.top + tr.height / 2;
+    title.dispatchEvent(new PointerEvent('pointerdown', opts(x, y)));
+    title.dispatchEvent(new PointerEvent('pointerup', opts(x, y)));
+  };
+  pclick(); // collapse (must NOT fire from the drag above, only from this)
+  await sleep(80);
   const collapsed = panel.classList.contains('pageaid-collapsed');
   const rc = panel.getBoundingClientRect();
-  title.click(); // expand again
-  await sleep(50);
+  pclick(); // expand again
+  await sleep(80);
   // West-edge resize: pull the left edge 100px left; width grows, right edge
   // stays planted (the gesture native resize:both could never do).
   const w0 = panel.getBoundingClientRect();
@@ -253,6 +263,35 @@ const dragSrc = `(async () => {
   };
 })()`;
 
+// Runs after collapseStyle is switched to "dock": title press should send the
+// pill to the bottom-right corner; expanding should restore the old position.
+const dockSrc = `(async () => {
+  const panel = document.getElementById('pageaid-panel');
+  const title = panel.querySelector('.pageaid-title');
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const opts = (x, y) => ({ bubbles: true, cancelable: true, pointerId: 9, button: 0, clientX: x, clientY: y });
+  const pclick = () => {
+    const tr = title.getBoundingClientRect();
+    const x = tr.left + 8, y = tr.top + tr.height / 2;
+    title.dispatchEvent(new PointerEvent('pointerdown', opts(x, y)));
+    title.dispatchEvent(new PointerEvent('pointerup', opts(x, y)));
+  };
+  const before = panel.getBoundingClientRect();
+  pclick();
+  await sleep(80);
+  const collapsed = panel.classList.contains('pageaid-collapsed');
+  const rd = panel.getBoundingClientRect();
+  pclick();
+  await sleep(80);
+  const after = panel.getBoundingClientRect();
+  return {
+    collapsed,
+    dockBR: Math.abs(window.innerWidth - rd.right - 16) <= 4 && Math.abs(window.innerHeight - rd.bottom - 16) <= 4,
+    restored: Math.abs(after.left - before.left) < 6 && Math.abs(after.top - before.top) < 6,
+    expanded: !panel.classList.contains('pageaid-collapsed'),
+  };
+})()`;
+
 writeFileSync(
   join(extDir, "bg-test.js"),
   `// TEST ONLY — not part of the shipped extension (see test/smoke-panel.mjs).
@@ -262,6 +301,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const DRIVE = ${JSON.stringify(driveSrc)};
 const CHECK = ${JSON.stringify(checkSrc)};
 const DRAG = ${JSON.stringify(dragSrc)};
+const DOCK = ${JSON.stringify(dockSrc)};
 async function shot(tab, name) {
   try {
     const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: "png" });
@@ -294,9 +334,12 @@ async function shot(tab, name) {
     await browser.tabs.executeScript(tab.id, { file: "/content/panel.js" });
     const [afterShow] = await browser.tabs.executeScript(tab.id, { code: CHECK });
     const [drag] = await browser.tabs.executeScript(tab.id, { code: DRAG });
+    await browser.storage.local.set({ collapseStyle: "dock" });
+    await sleep(300); // let storage.onChanged reach the content script
+    const [dock] = await browser.tabs.executeScript(tab.id, { code: DOCK });
     await sleep(200);
     await shot(tab, "3-dragged");
-    report({ final: true, ok: true, drive, afterHide, afterShow, drag });
+    report({ final: true, ok: true, drive, afterHide, afterShow, drag, dock });
   } catch (e) {
     report({ final: true, ok: false, error: String(e) });
   }
@@ -370,9 +413,13 @@ check("7 resize zones (no north midline — bar top is drag)", g.handles === 7, 
 check("hit-test: bar top-center drags, upper corners resize", g.topCenter === "bar" && /pageaid-rz-nw/.test(g.topLeft || "") && /pageaid-rz-ne/.test(g.topRight || ""), { topCenter: g.topCenter, topLeft: g.topLeft, topRight: g.topRight });
 check("west-edge resize grows leftward, right edge planted", Math.abs(g.resizeDw - 100) <= 10 && Math.abs(g.resizeDl - -100) <= 10 && g.resizeRightPlanted, { dw: g.resizeDw, dl: g.resizeDl });
 check("drag by bar moves panel (−140, +90)", Math.abs(g.dx - -140) <= 20 && Math.abs(g.dy - 90) <= 20, { dx: g.dx, dy: g.dy });
-check("drag does not trigger collapse; title click does", g.collapsed, g);
+check("real pointer press on title collapses (drag doesn't)", g.collapsed, g);
 check("collapse stays in place and shrinks", g.collapsedStaysPut && g.collapsedShrank, g);
-check("title click again re-expands", g.expandedAgain);
+check("second title press re-expands", g.expandedAgain);
+
+const k = result.dock || {};
+check("dock setting: title press docks pill to bottom-right", k.collapsed && k.dockBR, k);
+check("dock setting: expanding restores prior position", k.restored && k.expanded, k);
 
 for (const name of ["1-panel-open", "2-answer", "3-dragged"]) {
   const f = shots[name];

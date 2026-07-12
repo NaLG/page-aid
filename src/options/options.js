@@ -141,6 +141,9 @@ async function load() {
   const stored = await browser.storage.local.get(FIELDS);
   const cfg = { ...DEFAULTS, ...stored };
   for (const f of FIELDS) if ($(f)) $(f).value = cfg[f];
+  const { collapseStyle } = await browser.storage.local.get({ collapseStyle: "inplace" });
+  const radio = document.querySelector(`input[name="collapseStyle"][value="${collapseStyle === "dock" ? "dock" : "inplace"}"]`);
+  if (radio) radio.checked = true;
   // Seed the dropdown with curated suggestions immediately; a live load
   // refreshes them when the user clicks "Load models" (or Test connection).
   fillModelList(FALLBACK_MODELS[cfg.provider] || []);
@@ -292,6 +295,13 @@ $("shortcutSelect").addEventListener("change", () => {
 });
 $("shortcut").addEventListener("input", syncShortcutSelect);
 $("applyShortcut").addEventListener("click", applyShortcut);
+// Collapse behavior applies instantly (the panel listens on storage.onChanged).
+for (const r of document.querySelectorAll('input[name="collapseStyle"]')) {
+  r.addEventListener("change", async () => {
+    await browser.storage.local.set({ collapseStyle: r.value === "dock" ? "dock" : "inplace" });
+    setStatus("Collapse behavior saved.", "ok");
+  });
+}
 // Key is visible by default so pasting/editing (e.g. trimming stray text off a
 // pasted string) is easy; the toggle masks it for shoulder-surfing / sharing.
 $("toggleKey").addEventListener("click", () => {

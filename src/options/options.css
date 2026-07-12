@@ -59,6 +59,24 @@ label small {
   color: var(--muted);
   margin-top: 4px;
 }
+.radio-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.radio-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
+.radio-opt input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
 input, select, textarea {
   width: 100%;
   margin-top: 6px;

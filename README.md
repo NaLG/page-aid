@@ -16,8 +16,9 @@ question instead of auto-summarizing.
    moment; anything you had highlighted is included and flagged as such.
 3. Type a question — or hit the **Summarize this page** chip — and the answer
    streams into the panel. Follow-ups continue the conversation.
-4. Drag the panel anywhere by its title bar, resize it from the corner, or
-   click the title to collapse it to a pill (in place) while you read.
+4. Drag the panel anywhere by its title bar, resize from any edge or corner,
+   and click the title to collapse it to a pill — in place by default, or
+   docked to the bottom corner (Settings toggle).
 
 ## Least privilege by design
 

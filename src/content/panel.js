@@ -132,8 +132,11 @@
   title.textContent = "Page Aid";
   title.title = "Collapse / expand (drag to move)";
   title.addEventListener("click", () => {
+    // Kept for programmatic .click() and keyboard paths; real pointer presses
+    // never produce a native click here (the drag handler preventDefaults
+    // pointerdown), so the toggle is re-synthesized from pointerup instead.
     if (suppressTitleClick) return;
-    panel.classList.toggle("pageaid-collapsed");
+    toggleCollapsed();
   });
   const gear = document.createElement("button");
   gear.type = "button";
@@ -190,18 +193,50 @@
     panel.style.top = clampNum(r.top, 8, window.innerHeight - 48) + "px";
   }
   function anchorLeftTop() {
-    if (panel.style.left) return;
+    if (panel.style.left && panel.style.left !== "auto") return; // "auto" = docked pill
     const r = panel.getBoundingClientRect();
     panel.style.left = r.left + "px";
     panel.style.top = r.top + "px";
     panel.style.right = "auto";
     panel.style.bottom = "auto";
   }
+  // Collapse behavior is a setting: fold up in place (default) or dock the
+  // pill to the bottom-right corner. Live-updates from the options page.
+  let collapseStyle = "inplace";
+  browser.storage.local.get({ collapseStyle: "inplace" })
+    .then((s) => { collapseStyle = s.collapseStyle === "dock" ? "dock" : "inplace"; })
+    .catch(() => {});
+  browser.storage.onChanged.addListener((ch, area) => {
+    if (area === "local" && ch.collapseStyle)
+      collapseStyle = ch.collapseStyle.newValue === "dock" ? "dock" : "inplace";
+  });
+  function toggleCollapsed() {
+    const collapsing = !panel.classList.contains("pageaid-collapsed");
+    if (collapsing && collapseStyle === "dock") {
+      anchorLeftTop();
+      panel.dataset.prevLeft = panel.style.left;
+      panel.dataset.prevTop = panel.style.top;
+      panel.style.left = "auto";
+      panel.style.top = "auto";
+      panel.style.right = "16px";
+      panel.style.bottom = "16px";
+    } else if (!collapsing && panel.dataset.prevLeft) {
+      panel.style.left = panel.dataset.prevLeft;
+      panel.style.top = panel.dataset.prevTop;
+      panel.style.right = "auto";
+      panel.style.bottom = "auto";
+      delete panel.dataset.prevLeft;
+      delete panel.dataset.prevTop;
+    }
+    panel.classList.toggle("pageaid-collapsed");
+  }
+
   bar.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || e.target.closest("button")) return;
     anchorLeftTop();
     const startX = e.clientX, startY = e.clientY;
     const startLeft = parseFloat(panel.style.left), startTop = parseFloat(panel.style.top);
+    const downTarget = e.target;
     let dragging = false;
     const move = (ev) => {
       // Sub-threshold movement stays a click (collapse toggle); beyond it,
@@ -215,10 +250,18 @@
       bar.removeEventListener("pointermove", move);
       bar.removeEventListener("pointerup", up);
       bar.removeEventListener("pointercancel", up);
+      // preventDefault below suppresses the native click either way; make sure
+      // a stray one (some platforms still emit it) can't double-toggle.
+      suppressTitleClick = true;
+      setTimeout(() => { suppressTitleClick = false; }, 0);
       if (dragging) {
+        // A drag is never a toggle, and the spot is now user-chosen: a docked
+        // pill that was moved should expand where it sits, not jump back.
+        delete panel.dataset.prevLeft;
+        delete panel.dataset.prevTop;
         clampIntoView();
-        suppressTitleClick = true;
-        setTimeout(() => { suppressTitleClick = false; }, 0);
+      } else if (downTarget.closest(".pageaid-title")) {
+        toggleCollapsed(); // short press on the title = collapse/expand
       }
     };
     // Capture keeps the drag alive when the pointer outruns the bar; synthetic
