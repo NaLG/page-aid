@@ -1,4 +1,4 @@
-// Ask This Page — background (event page).
+// Page Aid — background (event page).
 // Owns the LLM call, keeping the API key out of page context and centralizing
 // provider logic, and injects the panel on toolbar click / hotkey. activeTab
 // means the click itself grants access to the current tab, so there are no
@@ -208,7 +208,7 @@ async function inject(tab) {
   } catch (e) {
     // Privileged pages (about:*, addons.mozilla.org, the PDF viewer…) refuse
     // injection; flash the badge so the click isn't a silent no-op.
-    console.warn("[ask-this-page] cannot inject:", e.message);
+    console.warn("[page-aid] cannot inject:", e.message);
     try {
       await browser.browserAction.setBadgeText({ text: "✕", tabId: tab.id });
       setTimeout(() => browser.browserAction.setBadgeText({ text: "", tabId: tab.id }).catch(() => {}), 2500);

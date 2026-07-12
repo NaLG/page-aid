@@ -1,5 +1,5 @@
 {
-  "name": "ask-this-page",
+  "name": "page-aid",
   "version": "0.1.0",
   "description": "Firefox extension: ask questions about the current page through your own LLM API key.",
   "type": "module",

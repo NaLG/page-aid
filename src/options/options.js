@@ -1,4 +1,4 @@
-// Ask This Page settings page.
+// Page Aid settings page.
 
 const FIELDS = ["provider", "baseUrl", "model", "apiKey", "systemPrompt", "maxTokens", "maxPageChars"];
 const $ = (id) => document.getElementById(id);
@@ -147,9 +147,9 @@ async function load() {
 }
 
 // Ensure we have host permission for the endpoint. ALL LLM hosts are optional
-// permissions (least privilege: the install prompt stays YouTube-only), so the
-// first Save / Test connection for a provider shows one Allow doorhanger for
-// that host alone; the grant persists.
+// permissions (least privilege: the install prompt stays storage+activeTab
+// only), so the first Save / Test connection for a provider shows one Allow
+// doorhanger for that host alone; the grant persists.
 async function ensureHostPermission(baseUrl) {
   let origin;
   try {
@@ -170,7 +170,7 @@ async function ensureHostPermission(baseUrl) {
     );
   }
   const granted = await browser.permissions.request({ origins: [origin] });
-  if (!granted) throw new Error(`Permission to reach ${origin} was declined. Ask This Page can't call that endpoint without it.`);
+  if (!granted) throw new Error(`Permission to reach ${origin} was declined. Page Aid can't call that endpoint without it.`);
   return true;
 }
 

@@ -1,4 +1,4 @@
-Ask This Page Privacy Policy
+Page Aid Privacy Policy
 
 Last updated 2026-07-12. Publisher: nalg.
 

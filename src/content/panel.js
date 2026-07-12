@@ -1,11 +1,11 @@
-// Ask This Page — injected panel. Runs when the user clicks the toolbar button
+// Page Aid — injected panel. Runs when the user clicks the toolbar button
 // or presses the hotkey; activeTab grants access to this tab for exactly that
 // gesture. The file is re-executed on every click, so the guard below turns
 // repeat clicks into a show/hide toggle that keeps the conversation.
 
 (() => {
-  if (window.__askThisPage) {
-    window.__askThisPage.toggle();
+  if (window.__pageAid) {
+    window.__pageAid.toggle();
     return;
   }
 
@@ -64,7 +64,7 @@
   }
 
   function renderMarkdown(md, container) {
-    container.classList.remove("atp-error");
+    container.classList.remove("pageaid-error");
     container.textContent = "";
     const lines = cleanText(md).split("\n");
     let list = null, listTag = null;
@@ -117,51 +117,51 @@
   // ---- UI ----------------------------------------------------------------------
 
   const panel = document.createElement("div");
-  panel.id = "atp-panel";
-  panel.className = "atp-panel";
+  panel.id = "pageaid-panel";
+  panel.className = "pageaid-panel";
 
   const bar = document.createElement("div");
-  bar.className = "atp-bar";
+  bar.className = "pageaid-bar";
   // Title doubles as collapse/expand: fold the panel to a compact bar while
   // keeping the conversation. ✕ only hides; the toolbar button re-shows it.
   const title = document.createElement("span");
-  title.className = "atp-title";
-  title.textContent = "Ask This Page";
+  title.className = "pageaid-title";
+  title.textContent = "Page Aid";
   title.title = "Collapse / expand";
-  title.addEventListener("click", () => panel.classList.toggle("atp-collapsed"));
+  title.addEventListener("click", () => panel.classList.toggle("pageaid-collapsed"));
   const gear = document.createElement("button");
   gear.type = "button";
-  gear.className = "atp-gear";
+  gear.className = "pageaid-gear";
   gear.textContent = "⚙";
   gear.title = "Settings";
   gear.addEventListener("click", () => browser.runtime.sendMessage({ type: "openOptions" }));
   const close = document.createElement("button");
   close.type = "button";
-  close.className = "atp-close";
+  close.className = "pageaid-close";
   close.textContent = "✕";
   close.title = "Hide (the toolbar button brings it back)";
-  close.addEventListener("click", () => panel.classList.add("atp-hidden"));
+  close.addEventListener("click", () => panel.classList.add("pageaid-hidden"));
   bar.append(title, gear, close);
 
   const body = document.createElement("div");
-  body.className = "atp-body";
+  body.className = "pageaid-body";
   const empty = document.createElement("div");
-  empty.className = "atp-empty";
+  empty.className = "pageaid-empty";
   const hint = document.createElement("p");
-  hint.className = "atp-hint";
+  hint.className = "pageaid-hint";
   hint.textContent = page.selection
     ? "Ask anything about this page — your highlighted text is included."
     : "Ask anything about this page.";
   const chip = document.createElement("button");
   chip.type = "button";
-  chip.className = "atp-chip";
+  chip.className = "pageaid-chip";
   chip.textContent = "Summarize this page";
   chip.addEventListener("click", () => ask("Summarize this page: a one-sentence TL;DR, then the key points as bullets."));
   empty.append(hint, chip);
   body.appendChild(empty);
 
   const askBar = document.createElement("div");
-  askBar.className = "atp-ask";
+  askBar.className = "pageaid-ask";
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Ask about this page…";
@@ -176,12 +176,12 @@
     question = String(question || "").trim();
     if (!question || input.disabled) return;
     input.disabled = askBtn.disabled = true;
-    body.querySelector(".atp-empty")?.remove();
+    body.querySelector(".pageaid-empty")?.remove();
     const qEl = document.createElement("p");
-    qEl.className = "atp-qa-q";
+    qEl.className = "pageaid-qa-q";
     qEl.textContent = question; // textContent only, injection-safe
     const aEl = document.createElement("div");
-    aEl.className = "atp-qa-a";
+    aEl.className = "pageaid-qa-a";
     aEl.textContent = "…";
     body.append(qEl, aEl);
     aEl.scrollIntoView({ block: "nearest" });
@@ -202,7 +202,7 @@
       qa.push({ q: question, a: finalAnswer });
       input.value = "";
     } catch (e) {
-      aEl.classList.add("atp-error");
+      aEl.classList.add("pageaid-error");
       aEl.textContent = `Ask failed: ${e.message}`;
     }
     input.disabled = askBtn.disabled = false;
@@ -217,20 +217,20 @@
       e.stopPropagation();
       if (ev !== "keydown") return;
       if (e.key === "Enter") { e.preventDefault(); ask(input.value); }
-      if (e.key === "Escape") { e.preventDefault(); panel.classList.add("atp-hidden"); }
+      if (e.key === "Escape") { e.preventDefault(); panel.classList.add("pageaid-hidden"); }
     });
   }
 
   function toggle() {
-    const hidden = panel.classList.toggle("atp-hidden");
+    const hidden = panel.classList.toggle("pageaid-hidden");
     if (!hidden) {
-      panel.classList.remove("atp-collapsed");
+      panel.classList.remove("pageaid-collapsed");
       input.focus();
     }
   }
 
   document.body.appendChild(panel);
   input.focus();
-  window.__askThisPage = { toggle };
-  console.log("[ask-this-page] panel injected on", location.href);
+  window.__pageAid = { toggle };
+  console.log("[page-aid] panel injected on", location.href);
 })();

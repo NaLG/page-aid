@@ -1,4 +1,4 @@
-# Ask This Page
+# Page Aid
 
 Pop up a panel on any web page, ask a question about it, and get an answer from
 the model of your choice — through your own API key. No backend, no account, no

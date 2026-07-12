@@ -1,6 +1,6 @@
-/* Ask This Page — injected panel */
+/* Page Aid — injected panel */
 
-.atp-panel {
+.pageaid-panel {
   position: fixed;
   top: 72px;
   right: 16px;
@@ -17,15 +17,15 @@
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  .atp-panel {
+  .pageaid-panel {
     background: #212121;
     color: #f1f1f1;
     border-color: rgba(255, 255, 255, 0.12);
   }
 }
-.atp-panel.atp-hidden { display: none; }
+.pageaid-panel.pageaid-hidden { display: none; }
 
-.atp-bar {
+.pageaid-bar {
   display: flex;
   align-items: center;
   padding: 10px 14px;
@@ -33,7 +33,7 @@
   font-size: 14px;
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
 }
-.atp-title {
+.pageaid-title {
   flex: 1;
   cursor: pointer;
   user-select: none;
@@ -41,14 +41,14 @@
   align-items: center;
   gap: 6px;
 }
-.atp-title::after {
+.pageaid-title::after {
   content: "▾";
   font-size: 11px;
   opacity: 0.6;
   transition: transform 0.15s ease;
 }
-.atp-gear,
-.atp-close {
+.pageaid-gear,
+.pageaid-close {
   border: none;
   background: transparent;
   color: inherit;
@@ -58,13 +58,13 @@
   padding: 0 0 0 12px;
   opacity: 0.75;
 }
-.atp-gear:hover,
-.atp-close:hover { opacity: 1; }
+.pageaid-gear:hover,
+.pageaid-close:hover { opacity: 1; }
 
 /* Collapsed: fold away the body + ask bar, dock as a compact bar at the bottom.
    The panel node stays in the DOM (conversation preserved), so tapping the
    title again restores it instantly. */
-.atp-panel.atp-collapsed {
+.pageaid-panel.pageaid-collapsed {
   top: auto;
   bottom: 16px;
   height: auto;
@@ -72,12 +72,12 @@
   width: auto;
   min-width: 180px;
 }
-.atp-panel.atp-collapsed .atp-bar { border-bottom: none; }
-.atp-panel.atp-collapsed .atp-body,
-.atp-panel.atp-collapsed .atp-ask { display: none; }
-.atp-panel.atp-collapsed .atp-title::after { transform: rotate(-90deg); }
+.pageaid-panel.pageaid-collapsed .pageaid-bar { border-bottom: none; }
+.pageaid-panel.pageaid-collapsed .pageaid-body,
+.pageaid-panel.pageaid-collapsed .pageaid-ask { display: none; }
+.pageaid-panel.pageaid-collapsed .pageaid-title::after { transform: rotate(-90deg); }
 
-.atp-body {
+.pageaid-body {
   padding: 14px 16px;
   overflow-y: auto;
   line-height: 1.5;
@@ -85,34 +85,34 @@
 }
 
 /* Rendered markdown answers */
-.atp-body h3,
-.atp-body h4,
-.atp-body h5,
-.atp-body h6 {
+.pageaid-body h3,
+.pageaid-body h4,
+.pageaid-body h5,
+.pageaid-body h6 {
   margin: 14px 0 6px;
   line-height: 1.3;
   font-weight: 600;
 }
-.atp-body h3 { font-size: 16px; }
-.atp-body h4 { font-size: 15px; }
-.atp-body h5,
-.atp-body h6 { font-size: 14px; }
-.atp-body p { margin: 0 0 10px; }
-.atp-body ul,
-.atp-body ol { margin: 0 0 10px; padding-left: 22px; }
-.atp-body li { margin: 3px 0; }
-.atp-body strong { font-weight: 600; }
-.atp-body code {
+.pageaid-body h3 { font-size: 16px; }
+.pageaid-body h4 { font-size: 15px; }
+.pageaid-body h5,
+.pageaid-body h6 { font-size: 14px; }
+.pageaid-body p { margin: 0 0 10px; }
+.pageaid-body ul,
+.pageaid-body ol { margin: 0 0 10px; padding-left: 22px; }
+.pageaid-body li { margin: 3px 0; }
+.pageaid-body strong { font-weight: 600; }
+.pageaid-body code {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.9em;
   background: rgba(128, 128, 128, 0.18);
   padding: 1px 5px;
   border-radius: 4px;
 }
-.atp-body a { color: #3b82f6; text-decoration: underline; }
-.atp-body > *:first-child { margin-top: 0; }
-.atp-body > *:last-child { margin-bottom: 0; }
-.atp-error {
+.pageaid-body a { color: #3b82f6; text-decoration: underline; }
+.pageaid-body > *:first-child { margin-top: 0; }
+.pageaid-body > *:last-child { margin-bottom: 0; }
+.pageaid-error {
   color: #d33;
   font-family: ui-monospace, monospace;
   font-size: 13px;
@@ -120,8 +120,8 @@
 }
 
 /* Empty state */
-.atp-hint { margin: 0 0 12px; opacity: 0.65; }
-.atp-chip {
+.pageaid-hint { margin: 0 0 12px; opacity: 0.65; }
+.pageaid-chip {
   border: 1px solid rgba(128, 128, 128, 0.4);
   border-radius: 16px;
   padding: 6px 12px;
@@ -131,16 +131,16 @@
   font-size: 13px;
   cursor: pointer;
 }
-.atp-chip:hover { border-color: #0b57d0; color: #0b57d0; }
+.pageaid-chip:hover { border-color: #0b57d0; color: #0b57d0; }
 
 /* Ask bar */
-.atp-ask {
+.pageaid-ask {
   display: flex;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid rgba(128, 128, 128, 0.2);
 }
-.atp-ask input {
+.pageaid-ask input {
   flex: 1;
   min-width: 0;
   padding: 8px 12px;
@@ -151,8 +151,8 @@
   font: inherit;
   font-size: 13px;
 }
-.atp-ask input:focus { outline: 2px solid #0b57d0; outline-offset: -1px; }
-.atp-ask button {
+.pageaid-ask input:focus { outline: 2px solid #0b57d0; outline-offset: -1px; }
+.pageaid-ask button {
   border: none;
   border-radius: 18px;
   padding: 0 16px;
@@ -163,23 +163,23 @@
   font-weight: 600;
   cursor: pointer;
 }
-.atp-ask button:hover { background: #0842a0; }
-.atp-ask button:disabled,
-.atp-ask input:disabled { opacity: 0.55; cursor: default; }
+.pageaid-ask button:hover { background: #0842a0; }
+.pageaid-ask button:disabled,
+.pageaid-ask input:disabled { opacity: 0.55; cursor: default; }
 
 /* Q&A turns */
-.atp-qa-q {
+.pageaid-qa-q {
   margin: 14px 0 6px;
   padding-top: 10px;
   border-top: 1px dashed rgba(128, 128, 128, 0.35);
   font-weight: 600;
 }
-.atp-qa-q:first-child { margin-top: 0; padding-top: 0; border-top: none; }
-.atp-qa-q::before { content: "Q: "; opacity: 0.6; }
+.pageaid-qa-q:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.pageaid-qa-q::before { content: "Q: "; opacity: 0.6; }
 
 /* Small screens: full-width bottom sheet */
 @media (max-width: 640px) {
-  .atp-panel {
+  .pageaid-panel {
     top: auto;
     bottom: 0;
     right: 0;
@@ -188,7 +188,7 @@
     max-height: 70vh;
     border-radius: 12px 12px 0 0;
   }
-  .atp-panel.atp-collapsed {
+  .pageaid-panel.pageaid-collapsed {
     bottom: 0;
     left: 0;
     right: 0;

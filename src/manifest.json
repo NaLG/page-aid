@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "Ask This Page",
+  "name": "Page Aid",
   "version": "0.1.0",
   "description": "Ask your own questions about the page you're on, answered through your own LLM API key. No backend, no tracking.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "ask-this-page@nalg.dev",
+      "id": "page-aid@nalg.dev",
       "strict_min_version": "115.0",
       "data_collection_permissions": {
         "required": [
@@ -37,7 +37,7 @@
     "persistent": false
   },
   "browser_action": {
-    "default_title": "Ask This Page"
+    "default_title": "Page Aid"
   },
   "commands": {
     "_execute_browser_action": {
