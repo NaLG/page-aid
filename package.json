@@ -1,0 +1,17 @@
+{
+  "name": "ask-this-page",
+  "version": "0.1.0",
+  "description": "Firefox extension: ask questions about the current page through your own LLM API key.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "nalg",
+  "scripts": {
+    "lint": "web-ext lint --source-dir src",
+    "run:desktop": "web-ext run --source-dir src --start-url 'https://en.wikipedia.org/wiki/Firefox'",
+    "build": "web-ext build --source-dir src --artifacts-dir dist --overwrite-dest"
+  },
+  "devDependencies": {
+    "web-ext": "^8.0.0"
+  }
+}

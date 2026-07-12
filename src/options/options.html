@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ask This Page Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Ask This Page</h1>
+      <p class="sub">Ask questions about the page you're on through your own LLM key. Nothing leaves your browser except the page text you send to the endpoint you choose.</p>
+
+      <div class="presets-bar">
+        <div class="presets-label">Quick setup, click a provider to fill the endpoint, then pick a model &amp; add your key:</div>
+        <div id="presetChips" class="preset-chips"></div>
+      </div>
+
+      <form id="settings">
+        <label>
+          Provider
+          <select id="provider">
+            <option value="openai">OpenAI-compatible (OpenAI, GLM, Gemini, OpenRouter, Groq, Ollama, LM Studio…)</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+          </select>
+        </label>
+
+        <label>
+          API base URL
+          <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.openai.com/v1" />
+        </label>
+
+        <label>
+          Model
+          <div class="model-row">
+            <select id="modelSelect">
+              <option value="">Pick a model…</option>
+            </select>
+            <button type="button" id="loadModels" title="Load this provider's live model list">↻ Load models</button>
+          </div>
+          <input id="model" type="text" spellcheck="false" placeholder="model id (pick above, or type a custom one)" />
+          <small id="modelHint">Pick from the dropdown, or type any model id. Click "Load models" to pull your provider's live catalog.</small>
+        </label>
+
+        <label>
+          API key
+          <span class="model-row">
+            <input id="apiKey" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="sk-…" />
+            <button type="button" id="toggleKey" title="Show or hide the key">Hide</button>
+          </span>
+          <small>Stored locally in this browser (storage.local). Never sent anywhere except your chosen endpoint.</small>
+          <small class="key-links">New to API keys? Sign up with a provider and create one on their key page:
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google Gemini</a> (free tier) ·
+            <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">OpenRouter</a> ·
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI</a> ·
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic</a> ·
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> ·
+            <a href="https://z.ai/model-api" target="_blank" rel="noopener">Z.ai</a>.
+            Or run a local model, no key at all: <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>, <a href="https://lmstudio.ai" target="_blank" rel="noopener">LM Studio</a>.</small>
+        </label>
+
+        <label>
+          System prompt (controls tone, length, and style)
+          <textarea id="systemPrompt" rows="6"></textarea>
+        </label>
+
+        <div class="row">
+          <label class="half">
+            Max output tokens
+            <input id="maxTokens" type="number" min="128" step="128" />
+          </label>
+          <label class="half">
+            Max page chars (longer is trimmed)
+            <input id="maxPageChars" type="number" min="10000" step="10000" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="save" class="primary">Save</button>
+          <button type="button" id="reset">Reset to defaults</button>
+          <button type="button" id="test">Test connection</button>
+        </div>
+        <p id="status" class="status" aria-live="polite"></p>
+      </form>
+
+      <p class="footnote">Local endpoints and non-listed hosts need host permission. It's requested the first time you save such a URL.</p>
+      <p class="footnote">Feedback and bug reports: <a href="https://github.com/NaLG/ask-this-page/issues" target="_blank" rel="noopener">github.com/NaLG/ask-this-page</a></p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

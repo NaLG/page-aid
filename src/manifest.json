@@ -1,0 +1,60 @@
+{
+  "manifest_version": 2,
+  "name": "Ask This Page",
+  "version": "0.1.0",
+  "description": "Ask your own questions about the page you're on, answered through your own LLM API key. No backend, no tracking.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ask-this-page@nalg.dev",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": [
+          "websiteContent",
+          "authenticationInfo"
+        ]
+      }
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "optional_permissions": [
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.z.ai/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://openrouter.ai/*",
+    "https://api.groq.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*"
+  ],
+  "background": {
+    "scripts": [
+      "background/background.js"
+    ],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_title": "Ask This Page"
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+A"
+      },
+      "description": "Open the Ask panel on the current page"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png",
+    "512": "icons/icon-512.png"
+  }
+}

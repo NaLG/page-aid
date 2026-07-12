@@ -1,0 +1,236 @@
+// Ask This Page — injected panel. Runs when the user clicks the toolbar button
+// or presses the hotkey; activeTab grants access to this tab for exactly that
+// gesture. The file is re-executed on every click, so the guard below turns
+// repeat clicks into a show/hide toggle that keeps the conversation.
+
+(() => {
+  if (window.__askThisPage) {
+    window.__askThisPage.toggle();
+    return;
+  }
+
+  // ---- page snapshot ---------------------------------------------------------
+  // Taken once, at the click. innerText already skips scripts, styles, and
+  // hidden nodes; prefer the page's main landmark when it carries real content.
+  function extractPage() {
+    const selection = String(window.getSelection() || "").trim();
+    const main = document.querySelector("main, [role='main'], article");
+    let text = ((main && main.innerText) || "").trim();
+    if (text.length < 500) text = ((document.body && document.body.innerText) || "").trim();
+    return {
+      title: document.title,
+      url: location.href,
+      selection,
+      text: text.replace(/\n{3,}/g, "\n\n"),
+    };
+  }
+  const page = extractPage();
+  const qa = []; // conversation turns; the whole history is resent per question
+
+  // ---- safe markdown rendering ----------------------------------------------
+  // Model output injected into someone else's page, so we NEVER use innerHTML
+  // with it. Every node is built with textContent (and hrefs are
+  // scheme-checked), making injection impossible while still formatting.
+
+  function cleanText(t) {
+    return String(t)
+      .replace(/<\|[^|>]*\|>/g, "")            // <|end_of_turn|>-style special tokens
+      .replace(/<_[^>]*_>/g, "")               // <_ ... _> markers
+      .replace(/\b(?:end_?of_?turn|ofturn)_?\b/gi, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .trim();
+  }
+
+  function renderInline(text, parent) {
+    const re = /(\*\*([^*]+)\*\*|__([^_]+)__|\*([^*\n]+)\*|`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\))/g;
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+      if (m[2] || m[3]) { const el = document.createElement("strong"); el.textContent = m[2] || m[3]; parent.appendChild(el); }
+      else if (m[4]) { const el = document.createElement("em"); el.textContent = m[4]; parent.appendChild(el); }
+      else if (m[5]) { const el = document.createElement("code"); el.textContent = m[5]; parent.appendChild(el); }
+      else if (m[6] && m[7]) {
+        if (/^https?:\/\//i.test(m[7])) {
+          const a = document.createElement("a");
+          a.href = m[7]; a.textContent = m[6]; a.target = "_blank"; a.rel = "noopener noreferrer";
+          parent.appendChild(a);
+        } else {
+          parent.appendChild(document.createTextNode(m[0])); // unsafe scheme -> literal
+        }
+      }
+      last = re.lastIndex;
+    }
+    if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+  }
+
+  function renderMarkdown(md, container) {
+    container.classList.remove("atp-error");
+    container.textContent = "";
+    const lines = cleanText(md).split("\n");
+    let list = null, listTag = null;
+    const endList = () => { list = null; listTag = null; };
+    for (const line of lines) {
+      let m;
+      if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+        endList();
+        const el = document.createElement("h" + Math.min(Math.max(m[1].length + 1, 3), 6)); // #→h3, ##→h3, ###→h4
+        renderInline(m[2], el);
+        container.appendChild(el);
+      } else if ((m = line.match(/^\s*[-*+]\s+(.*)$/))) {
+        if (listTag !== "ul") { list = document.createElement("ul"); container.appendChild(list); listTag = "ul"; }
+        const li = document.createElement("li"); renderInline(m[1], li); list.appendChild(li);
+      } else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) {
+        if (listTag !== "ol") { list = document.createElement("ol"); container.appendChild(list); listTag = "ol"; }
+        const li = document.createElement("li"); renderInline(m[1], li); list.appendChild(li);
+      } else if (line.trim() === "") {
+        endList();
+      } else {
+        endList();
+        const p = document.createElement("p"); renderInline(line, p); container.appendChild(p);
+      }
+    }
+  }
+
+  // ---- background bridge ------------------------------------------------------
+  // The LLM call runs in the background script (keeps the API key out of page
+  // context). Streaming chunks arrive via a port; returns the final text.
+  function requestLLM(payload, { onChunk } = {}) {
+    return new Promise((resolve, reject) => {
+      const port = browser.runtime.connect({ name: "ask" });
+      let acc = "";
+      port.onMessage.addListener((msg) => {
+        if (msg.type === "chunk") {
+          acc += msg.text;
+          onChunk?.(msg.text);
+        } else if (msg.type === "done") {
+          resolve(msg.text ?? acc);
+          port.disconnect();
+        } else if (msg.type === "error") {
+          reject(new Error(msg.error));
+          port.disconnect();
+        }
+      });
+      port.postMessage(payload);
+    });
+  }
+
+  // ---- UI ----------------------------------------------------------------------
+
+  const panel = document.createElement("div");
+  panel.id = "atp-panel";
+  panel.className = "atp-panel";
+
+  const bar = document.createElement("div");
+  bar.className = "atp-bar";
+  // Title doubles as collapse/expand: fold the panel to a compact bar while
+  // keeping the conversation. ✕ only hides; the toolbar button re-shows it.
+  const title = document.createElement("span");
+  title.className = "atp-title";
+  title.textContent = "Ask This Page";
+  title.title = "Collapse / expand";
+  title.addEventListener("click", () => panel.classList.toggle("atp-collapsed"));
+  const gear = document.createElement("button");
+  gear.type = "button";
+  gear.className = "atp-gear";
+  gear.textContent = "⚙";
+  gear.title = "Settings";
+  gear.addEventListener("click", () => browser.runtime.sendMessage({ type: "openOptions" }));
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "atp-close";
+  close.textContent = "✕";
+  close.title = "Hide (the toolbar button brings it back)";
+  close.addEventListener("click", () => panel.classList.add("atp-hidden"));
+  bar.append(title, gear, close);
+
+  const body = document.createElement("div");
+  body.className = "atp-body";
+  const empty = document.createElement("div");
+  empty.className = "atp-empty";
+  const hint = document.createElement("p");
+  hint.className = "atp-hint";
+  hint.textContent = page.selection
+    ? "Ask anything about this page — your highlighted text is included."
+    : "Ask anything about this page.";
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "atp-chip";
+  chip.textContent = "Summarize this page";
+  chip.addEventListener("click", () => ask("Summarize this page: a one-sentence TL;DR, then the key points as bullets."));
+  empty.append(hint, chip);
+  body.appendChild(empty);
+
+  const askBar = document.createElement("div");
+  askBar.className = "atp-ask";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "Ask about this page…";
+  const askBtn = document.createElement("button");
+  askBtn.type = "button";
+  askBtn.textContent = "Ask";
+  askBar.append(input, askBtn);
+
+  panel.append(bar, body, askBar);
+
+  async function ask(question) {
+    question = String(question || "").trim();
+    if (!question || input.disabled) return;
+    input.disabled = askBtn.disabled = true;
+    body.querySelector(".atp-empty")?.remove();
+    const qEl = document.createElement("p");
+    qEl.className = "atp-qa-q";
+    qEl.textContent = question; // textContent only, injection-safe
+    const aEl = document.createElement("div");
+    aEl.className = "atp-qa-a";
+    aEl.textContent = "…";
+    body.append(qEl, aEl);
+    aEl.scrollIntoView({ block: "nearest" });
+    try {
+      let acc = "", lastRender = 0;
+      const answer = await requestLLM(
+        { type: "ask", title: page.title, url: page.url, selection: page.selection, pageText: page.text, qa, question },
+        {
+          onChunk: (c) => {
+            acc += c;
+            const now = Date.now();
+            if (now - lastRender > 80) { lastRender = now; renderMarkdown(acc, aEl); } // live, throttled
+          },
+        }
+      );
+      const finalAnswer = answer != null ? answer : acc;
+      renderMarkdown(finalAnswer, aEl); // final clean render
+      qa.push({ q: question, a: finalAnswer });
+      input.value = "";
+    } catch (e) {
+      aEl.classList.add("atp-error");
+      aEl.textContent = `Ask failed: ${e.message}`;
+    }
+    input.disabled = askBtn.disabled = false;
+    input.focus();
+  }
+
+  askBtn.addEventListener("click", () => ask(input.value));
+  // Keep the host page's global hotkeys away from the field; Enter asks,
+  // Escape hides the panel.
+  for (const ev of ["keydown", "keyup", "keypress"]) {
+    input.addEventListener(ev, (e) => {
+      e.stopPropagation();
+      if (ev !== "keydown") return;
+      if (e.key === "Enter") { e.preventDefault(); ask(input.value); }
+      if (e.key === "Escape") { e.preventDefault(); panel.classList.add("atp-hidden"); }
+    });
+  }
+
+  function toggle() {
+    const hidden = panel.classList.toggle("atp-hidden");
+    if (!hidden) {
+      panel.classList.remove("atp-collapsed");
+      input.focus();
+    }
+  }
+
+  document.body.appendChild(panel);
+  input.focus();
+  window.__askThisPage = { toggle };
+  console.log("[ask-this-page] panel injected on", location.href);
+})();
