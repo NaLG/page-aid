@@ -230,6 +230,48 @@
     e.preventDefault(); // no text selection while dragging
   });
 
+  // ---- resize: all corners + edge midlines -------------------------------------
+  // Zone letters encode which sides move: e/s grow width/height; w/n also shift
+  // left/top so the opposite edge stays planted.
+  const MIN_W = 280, MIN_H = 160; // keep in sync with panel.css min-width/height
+  function startResize(e, zone) {
+    if (e.button !== 0) return;
+    anchorLeftTop();
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const target = e.currentTarget;
+    const move = (ev) => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      let { left, top, width, height } = r;
+      if (zone.includes("e")) width += dx;
+      if (zone.includes("s")) height += dy;
+      if (zone.includes("w")) { const d = Math.min(dx, width - MIN_W); left += d; width -= d; }
+      if (zone.includes("n")) { const d = Math.min(dy, height - MIN_H); top += d; height -= d; }
+      panel.style.width = Math.max(width, MIN_W) + "px";
+      panel.style.height = Math.max(height, MIN_H) + "px";
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+      panel.style.maxHeight = "none"; // user override beats the default cap
+    };
+    const up = () => {
+      target.removeEventListener("pointermove", move);
+      target.removeEventListener("pointerup", up);
+      target.removeEventListener("pointercancel", up);
+    };
+    try { target.setPointerCapture(e.pointerId); } catch {}
+    target.addEventListener("pointermove", move);
+    target.addEventListener("pointerup", up);
+    target.addEventListener("pointercancel", up);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  for (const zone of ["n", "s", "e", "w", "ne", "nw", "se", "sw"]) {
+    const h = document.createElement("div");
+    h.className = `pageaid-rz pageaid-rz-${zone}`;
+    h.addEventListener("pointerdown", (e) => startResize(e, zone));
+    panel.appendChild(h);
+  }
+
   async function ask(question) {
     question = String(question || "").trim();
     if (!question || input.disabled) return;

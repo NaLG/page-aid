@@ -13,7 +13,7 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 ## State
 
 - Skeleton complete; lints clean. End-to-end smoke test PASSES in real Firefox
-  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 26 assertions
+  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 27 assertions
   covering injection, <main> extraction (sentinel in the request, nav junk out),
   streaming markdown render, toggle guard, drag/collapse-in-place/resize-handle,
   plus PNG screenshots relayed to test/artifacts/ for visual review. The activeTab toolbar-click gesture is the
@@ -40,7 +40,13 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
   landmark preferred (body.innerText fallback when thin), selection captured
   and flagged separately in the prompt.
 - Options page: provider presets / live model loader / test connection carried
-  over unchanged; buttonStyle removed; maxTranscriptChars → maxPageChars.
+  over unchanged; buttonStyle removed; maxTranscriptChars → maxPageChars;
+  keyboard-shortcut rebinding added (commands.update, presets + custom).
+- Panel: drag by bar (4px threshold vs title-click collapse), custom resize on
+  all corners + edge midlines (MIN_W/MIN_H in panel.js must match panel.css),
+  collapse-in-place. Page-zoom behavior deliberately untouched: Firefox
+  full-page zoom already scales the panel; owner may want em-sizing if he uses
+  text-only zoom — awaiting his answer.
 
 ## Next
 

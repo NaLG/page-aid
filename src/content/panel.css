@@ -15,13 +15,26 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
   z-index: 2147483000;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
-  /* Native resize handle (bottom-right). Needs overflow != visible; the body
-     scrolls on its own, so nothing is lost. */
-  resize: both;
+  /* overflow != visible so inline size changes clip cleanly; the body scrolls
+     on its own, so nothing is lost. Resizing is custom — all four corners and
+     edge midlines (.pageaid-rz below); native resize:both only ever offers
+     bottom-right, useless for a panel that spawns hugging the right edge. */
   overflow: hidden;
   min-width: 280px;
   min-height: 160px;
 }
+
+/* Invisible resize zones; the cursor is the affordance. */
+.pageaid-rz { position: absolute; }
+.pageaid-rz-n  { top: 0; left: 16px; right: 16px; height: 7px; cursor: ns-resize; }
+.pageaid-rz-s  { bottom: 0; left: 16px; right: 16px; height: 7px; cursor: ns-resize; }
+.pageaid-rz-e  { right: 0; top: 16px; bottom: 16px; width: 7px; cursor: ew-resize; }
+.pageaid-rz-w  { left: 0; top: 16px; bottom: 16px; width: 7px; cursor: ew-resize; }
+.pageaid-rz-ne { top: 0; right: 0; width: 16px; height: 16px; cursor: nesw-resize; }
+.pageaid-rz-nw { top: 0; left: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+.pageaid-rz-se { bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+.pageaid-rz-sw { bottom: 0; left: 0; width: 16px; height: 16px; cursor: nesw-resize; }
+.pageaid-panel.pageaid-collapsed .pageaid-rz { display: none; }
 @media (prefers-color-scheme: dark) {
   .pageaid-panel {
     background: #212121;
@@ -80,7 +93,6 @@
   width: auto !important;
   min-width: 180px;
   min-height: 0 !important;
-  resize: none;
 }
 .pageaid-panel.pageaid-collapsed .pageaid-bar { border-bottom: none; }
 .pageaid-panel.pageaid-collapsed .pageaid-body,

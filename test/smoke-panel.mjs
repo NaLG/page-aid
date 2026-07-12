@@ -213,8 +213,19 @@ const dragSrc = `(async () => {
   const rc = panel.getBoundingClientRect();
   title.click(); // expand again
   await sleep(50);
+  // West-edge resize: pull the left edge 100px left; width grows, right edge
+  // stays planted (the gesture native resize:both could never do).
+  const w0 = panel.getBoundingClientRect();
+  const wz = panel.querySelector('.pageaid-rz-w');
+  const wr = wz.getBoundingClientRect();
+  const wx = wr.left + 3, wy = wr.top + wr.height / 2;
+  wz.dispatchEvent(new PointerEvent('pointerdown', opts(wx, wy)));
+  wz.dispatchEvent(new PointerEvent('pointermove', opts(wx - 100, wy)));
+  wz.dispatchEvent(new PointerEvent('pointerup', opts(wx - 100, wy)));
+  await sleep(50);
+  const w1 = panel.getBoundingClientRect();
   return {
-    resizeMode: getComputedStyle(panel).resize,
+    handles: panel.querySelectorAll('.pageaid-rz').length,
     anchored: !!panel.style.left,
     dx: Math.round(r1.left - r0.left),
     dy: Math.round(r1.top - r0.top),
@@ -222,6 +233,9 @@ const dragSrc = `(async () => {
     collapsedStaysPut: Math.abs(rc.left - r1.left) < 6 && Math.abs(rc.top - r1.top) < 6,
     collapsedShrank: rc.height < r1.height - 40,
     expandedAgain: !panel.classList.contains('pageaid-collapsed'),
+    resizeDw: Math.round(w1.width - w0.width),
+    resizeDl: Math.round(w1.left - w0.left),
+    resizeRightPlanted: Math.abs(w1.right - w0.right) < 3,
   };
 })()`;
 
@@ -338,7 +352,8 @@ check("toggle: third injection shows panel again", result.afterShow?.present && 
 
 const g = result.drag || {};
 check("desktop: panel anchored left/top for natural resize", g.anchored);
-check("resize handle enabled (resize: both)", g.resizeMode === "both", g.resizeMode);
+check("8 resize zones present (corners + edge midlines)", g.handles === 8, g.handles);
+check("west-edge resize grows leftward, right edge planted", Math.abs(g.resizeDw - 100) <= 10 && Math.abs(g.resizeDl - -100) <= 10 && g.resizeRightPlanted, { dw: g.resizeDw, dl: g.resizeDl });
 check("drag by bar moves panel (−140, +90)", Math.abs(g.dx - -140) <= 20 && Math.abs(g.dy - 90) <= 20, { dx: g.dx, dy: g.dy });
 check("drag does not trigger collapse; title click does", g.collapsed, g);
 check("collapse stays in place and shrinks", g.collapsedStaysPut && g.collapsedShrank, g);

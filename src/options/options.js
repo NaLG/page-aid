@@ -197,8 +197,46 @@ async function save() {
 
 async function reset() {
   await browser.storage.local.clear();
+  await browser.commands.reset(COMMAND).catch(() => {});
   await load();
+  await loadShortcut();
   setStatus("Reset to defaults. Click Save to keep.", "");
+}
+
+// ---- keyboard shortcut -------------------------------------------------------
+// Rebinding is live via commands.update (no Save round trip); Firefox persists
+// it per profile. getAll() reflects reality, including edits made in Firefox's
+// own Manage Extension Shortcuts UI.
+const COMMAND = "_execute_browser_action";
+
+async function loadShortcut() {
+  try {
+    const cmd = (await browser.commands.getAll()).find((c) => c.name === COMMAND);
+    if (cmd) {
+      $("shortcut").value = cmd.shortcut || "";
+      syncShortcutSelect();
+    }
+  } catch {}
+}
+
+function syncShortcutSelect() {
+  const sel = $("shortcutSelect");
+  const val = $("shortcut").value;
+  sel.value = [...sel.options].some((o) => o.value === val) ? val : "__custom__";
+}
+
+async function applyShortcut() {
+  const shortcut = $("shortcut").value.trim();
+  if (!shortcut) {
+    setStatus("Enter a shortcut first (e.g. Alt+Shift+K).", "err");
+    return;
+  }
+  try {
+    await browser.commands.update({ name: COMMAND, shortcut });
+    setStatus(`Shortcut set to ${shortcut}.`, "ok");
+  } catch (e) {
+    setStatus(`Couldn't set "${shortcut}": ${e.message}`, "err");
+  }
 }
 
 // Fire a tiny non-streaming request to verify the endpoint + key.
@@ -246,6 +284,14 @@ $("loadModels").addEventListener("click", () => loadModels(false));
 $("save").addEventListener("click", save);
 $("reset").addEventListener("click", reset);
 $("test").addEventListener("click", testConnection);
+$("shortcutSelect").addEventListener("change", () => {
+  const v = $("shortcutSelect").value;
+  if (v === "__custom__") { $("shortcut").focus(); return; }
+  $("shortcut").value = v;
+  applyShortcut();
+});
+$("shortcut").addEventListener("input", syncShortcutSelect);
+$("applyShortcut").addEventListener("click", applyShortcut);
 // Key is visible by default so pasting/editing (e.g. trimming stray text off a
 // pasted string) is easy; the toggle masks it for shoulder-surfing / sharing.
 $("toggleKey").addEventListener("click", () => {
@@ -256,3 +302,4 @@ $("toggleKey").addEventListener("click", () => {
 });
 renderPresets();
 load();
+loadShortcut();

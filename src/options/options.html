@@ -64,6 +64,22 @@
           <textarea id="systemPrompt" rows="6"></textarea>
         </label>
 
+        <div class="field">
+          Keyboard shortcut (opens the panel)
+          <div class="model-row">
+            <select id="shortcutSelect">
+              <option value="Alt+Shift+A">Alt+Shift+A (default)</option>
+              <option value="Alt+Shift+P">Alt+Shift+P</option>
+              <option value="Alt+Shift+Space">Alt+Shift+Space</option>
+              <option value="Ctrl+Shift+U">Ctrl+Shift+U (⌘⇧U on macOS)</option>
+              <option value="__custom__">✏️ Custom / type your own…</option>
+            </select>
+            <button type="button" id="applyShortcut">Apply</button>
+          </div>
+          <input id="shortcut" type="text" spellcheck="false" placeholder="e.g. Alt+Shift+K, Ctrl+Shift+Period, F9" />
+          <small>Applied immediately, no Save needed. Format: modifiers+key ("Ctrl" means ⌘ on macOS; "MacCtrl" is the Mac control key). Also editable under Firefox's Manage Extension Shortcuts.</small>
+        </div>
+
         <div class="row">
           <label class="half">
             Max output tokens
