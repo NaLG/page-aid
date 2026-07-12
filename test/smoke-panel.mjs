@@ -192,6 +192,39 @@ const checkSrc = `(() => {
   return { present: !!p, hidden: !!p && p.classList.contains('pageaid-hidden') };
 })()`;
 
+// Drags the panel by its bar with synthetic pointer events, then collapses and
+// re-expands via the title, measuring that the panel moves and stays put.
+const dragSrc = `(async () => {
+  const panel = document.getElementById('pageaid-panel');
+  const bar = panel.querySelector('.pageaid-bar');
+  const title = panel.querySelector('.pageaid-title');
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const r0 = panel.getBoundingClientRect();
+  const opts = (x, y) => ({ bubbles: true, cancelable: true, pointerId: 7, button: 0, clientX: x, clientY: y });
+  const bx = r0.left + 60, by = r0.top + 18;
+  bar.dispatchEvent(new PointerEvent('pointerdown', opts(bx, by)));
+  bar.dispatchEvent(new PointerEvent('pointermove', opts(bx - 140, by + 90)));
+  bar.dispatchEvent(new PointerEvent('pointerup', opts(bx - 140, by + 90)));
+  await sleep(50);
+  const r1 = panel.getBoundingClientRect();
+  title.click(); // collapse (must NOT fire from the drag above, only from this)
+  await sleep(50);
+  const collapsed = panel.classList.contains('pageaid-collapsed');
+  const rc = panel.getBoundingClientRect();
+  title.click(); // expand again
+  await sleep(50);
+  return {
+    resizeMode: getComputedStyle(panel).resize,
+    anchored: !!panel.style.left,
+    dx: Math.round(r1.left - r0.left),
+    dy: Math.round(r1.top - r0.top),
+    collapsed,
+    collapsedStaysPut: Math.abs(rc.left - r1.left) < 6 && Math.abs(rc.top - r1.top) < 6,
+    collapsedShrank: rc.height < r1.height - 40,
+    expandedAgain: !panel.classList.contains('pageaid-collapsed'),
+  };
+})()`;
+
 writeFileSync(
   join(extDir, "bg-test.js"),
   `// TEST ONLY — not part of the shipped extension (see test/smoke-panel.mjs).
@@ -200,6 +233,7 @@ const report = (msg) => fetch(BASE + "/report", { method: "POST", headers: { "co
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const DRIVE = ${JSON.stringify(driveSrc)};
 const CHECK = ${JSON.stringify(checkSrc)};
+const DRAG = ${JSON.stringify(dragSrc)};
 async function shot(tab, name) {
   try {
     const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: "png" });
@@ -231,7 +265,10 @@ async function shot(tab, name) {
     const [afterHide] = await browser.tabs.executeScript(tab.id, { code: CHECK });
     await browser.tabs.executeScript(tab.id, { file: "/content/panel.js" });
     const [afterShow] = await browser.tabs.executeScript(tab.id, { code: CHECK });
-    report({ final: true, ok: true, drive, afterHide, afterShow });
+    const [drag] = await browser.tabs.executeScript(tab.id, { code: DRAG });
+    await sleep(200);
+    await shot(tab, "3-dragged");
+    report({ final: true, ok: true, drive, afterHide, afterShow, drag });
   } catch (e) {
     report({ final: true, ok: false, error: String(e) });
   }
@@ -299,7 +336,15 @@ check("request: streaming on, model + key passed through", llmRequest?.stream ==
 check("toggle: re-injection hides panel", result.afterHide?.present && result.afterHide?.hidden, result.afterHide);
 check("toggle: third injection shows panel again", result.afterShow?.present && result.afterShow?.hidden === false, result.afterShow);
 
-for (const name of ["1-panel-open", "2-answer"]) {
+const g = result.drag || {};
+check("desktop: panel anchored left/top for natural resize", g.anchored);
+check("resize handle enabled (resize: both)", g.resizeMode === "both", g.resizeMode);
+check("drag by bar moves panel (−140, +90)", Math.abs(g.dx - -140) <= 20 && Math.abs(g.dy - 90) <= 20, { dx: g.dx, dy: g.dy });
+check("drag does not trigger collapse; title click does", g.collapsed, g);
+check("collapse stays in place and shrinks", g.collapsedStaysPut && g.collapsedShrank, g);
+check("title click again re-expands", g.expandedAgain);
+
+for (const name of ["1-panel-open", "2-answer", "3-dragged"]) {
   const f = shots[name];
   const size = f ? statSync(f).size : 0;
   check(`screenshot ${name}.png saved (${(size / 1024).toFixed(0)} KB)`, size > 10000, f || "missing");

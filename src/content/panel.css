@@ -15,6 +15,12 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
   z-index: 2147483000;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Native resize handle (bottom-right). Needs overflow != visible; the body
+     scrolls on its own, so nothing is lost. */
+  resize: both;
+  overflow: hidden;
+  min-width: 280px;
+  min-height: 160px;
 }
 @media (prefers-color-scheme: dark) {
   .pageaid-panel {
@@ -32,6 +38,9 @@
   font-weight: 600;
   font-size: 14px;
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+  cursor: grab;
+  user-select: none;
+  touch-action: none; /* pointer-event dragging on touch screens */
 }
 .pageaid-title {
   flex: 1;
@@ -61,16 +70,17 @@
 .pageaid-gear:hover,
 .pageaid-close:hover { opacity: 1; }
 
-/* Collapsed: fold away the body + ask bar, dock as a compact bar at the bottom.
-   The panel node stays in the DOM (conversation preserved), so tapping the
-   title again restores it instantly. */
+/* Collapsed: fold away the body + ask bar into a compact title pill, in place
+   (wherever it was dragged). The panel node stays in the DOM (conversation
+   preserved), so tapping the title again restores it instantly. !important
+   beats the inline width/height a user set via the resize handle. */
 .pageaid-panel.pageaid-collapsed {
-  top: auto;
-  bottom: 16px;
-  height: auto;
+  height: auto !important;
   max-height: none;
-  width: auto;
+  width: auto !important;
   min-width: 180px;
+  min-height: 0 !important;
+  resize: none;
 }
 .pageaid-panel.pageaid-collapsed .pageaid-bar { border-bottom: none; }
 .pageaid-panel.pageaid-collapsed .pageaid-body,
@@ -82,6 +92,9 @@
   overflow-y: auto;
   line-height: 1.5;
   font-size: 14px;
+  /* Fill whatever height the user resizes to, keeping the ask bar pinned. */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Rendered markdown answers */
@@ -192,7 +205,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100%;
+    width: 100% !important; /* outranks the desktop collapse-in-place width */
     min-width: 0;
   }
 }

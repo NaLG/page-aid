@@ -122,13 +122,19 @@
 
   const bar = document.createElement("div");
   bar.className = "pageaid-bar";
-  // Title doubles as collapse/expand: fold the panel to a compact bar while
-  // keeping the conversation. ✕ only hides; the toolbar button re-shows it.
+  // Title doubles as collapse/expand: fold the panel to a compact bar (in
+  // place — it stays where you dragged it) while keeping the conversation.
+  // ✕ only hides; the toolbar button re-shows it. A drag on the bar must not
+  // fire the collapse toggle, so the drag handler raises this flag.
+  let suppressTitleClick = false;
   const title = document.createElement("span");
   title.className = "pageaid-title";
   title.textContent = "Page Aid";
-  title.title = "Collapse / expand";
-  title.addEventListener("click", () => panel.classList.toggle("pageaid-collapsed"));
+  title.title = "Collapse / expand (drag to move)";
+  title.addEventListener("click", () => {
+    if (suppressTitleClick) return;
+    panel.classList.toggle("pageaid-collapsed");
+  });
   const gear = document.createElement("button");
   gear.type = "button";
   gear.className = "pageaid-gear";
@@ -171,6 +177,58 @@
   askBar.append(input, askBtn);
 
   panel.append(bar, body, askBar);
+
+  // ---- drag + placement -------------------------------------------------------
+  // The panel starts CSS-anchored top-right. On desktop it is converted to
+  // explicit left/top as soon as it exists (and at the latest on first drag):
+  // a right-anchored box resizes mirrored — the native handle grows it away
+  // from the pointer — and dragging needs concrete coordinates anyway.
+  const clampNum = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  function clampIntoView() {
+    const r = panel.getBoundingClientRect();
+    panel.style.left = clampNum(r.left, 80 - r.width, window.innerWidth - 80) + "px";
+    panel.style.top = clampNum(r.top, 8, window.innerHeight - 48) + "px";
+  }
+  function anchorLeftTop() {
+    if (panel.style.left) return;
+    const r = panel.getBoundingClientRect();
+    panel.style.left = r.left + "px";
+    panel.style.top = r.top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+  }
+  bar.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || e.target.closest("button")) return;
+    anchorLeftTop();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeft = parseFloat(panel.style.left), startTop = parseFloat(panel.style.top);
+    let dragging = false;
+    const move = (ev) => {
+      // Sub-threshold movement stays a click (collapse toggle); beyond it,
+      // it's a drag and the click that follows pointerup is swallowed.
+      if (!dragging && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 4) return;
+      dragging = true;
+      panel.style.left = startLeft + (ev.clientX - startX) + "px";
+      panel.style.top = startTop + (ev.clientY - startY) + "px";
+    };
+    const up = () => {
+      bar.removeEventListener("pointermove", move);
+      bar.removeEventListener("pointerup", up);
+      bar.removeEventListener("pointercancel", up);
+      if (dragging) {
+        clampIntoView();
+        suppressTitleClick = true;
+        setTimeout(() => { suppressTitleClick = false; }, 0);
+      }
+    };
+    // Capture keeps the drag alive when the pointer outruns the bar; synthetic
+    // test events have no active pointer to capture, hence the try.
+    try { bar.setPointerCapture(e.pointerId); } catch {}
+    bar.addEventListener("pointermove", move);
+    bar.addEventListener("pointerup", up);
+    bar.addEventListener("pointercancel", up);
+    e.preventDefault(); // no text selection while dragging
+  });
 
   async function ask(question) {
     question = String(question || "").trim();
@@ -225,11 +283,15 @@
     const hidden = panel.classList.toggle("pageaid-hidden");
     if (!hidden) {
       panel.classList.remove("pageaid-collapsed");
+      if (panel.style.left) clampIntoView(); // viewport may have changed while hidden
       input.focus();
     }
   }
 
   document.body.appendChild(panel);
+  // Mobile keeps the pure-CSS bottom-sheet layout (inline coordinates would
+  // fight the media query); desktop anchors immediately for natural resizing.
+  if (window.innerWidth > 640) anchorLeftTop();
   input.focus();
   window.__pageAid = { toggle };
   console.log("[page-aid] panel injected on", location.href);

@@ -13,10 +13,10 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 ## State
 
 - Skeleton complete; lints clean. End-to-end smoke test PASSES in real Firefox
-  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 19 assertions
+  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 26 assertions
   covering injection, <main> extraction (sentinel in the request, nav junk out),
-  streaming markdown render, toggle guard, plus PNG screenshots relayed to
-  test/artifacts/ for visual review. The activeTab toolbar-click gesture is the
+  streaming markdown render, toggle guard, drag/collapse-in-place/resize-handle,
+  plus PNG screenshots relayed to test/artifacts/ for visual review. The activeTab toolbar-click gesture is the
   one path the harness can't drive (test build pre-grants <all_urls> instead) —
   verify with one manual click.
 - Name DECIDED 2026-07-12: "Page Aid" (id `page-aid@nalg.dev`). Known close
