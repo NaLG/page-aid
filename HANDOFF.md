@@ -63,7 +63,13 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
   real activeTab gesture — then a heavy SPA, the no-key error path, a privileged
   page (badge flash), and one real-LLM round trip (localhost Ollama or a key).
 - Icons.
-- Android: needs an Android emulator/SDK setup (none on this machine). Re-add a gecko_android block there
-  and check popup-less browserAction.onClicked behavior on Fenix.
+- Android: static prep DONE (gecko_android strict_min_version 142; options page
+  hides the shortcut control where browser.commands doesn't exist; badge-flash
+  fallback already try/wrapped). Remaining: ON-DEVICE verification on an Android emulator (no SDK/adb on this machine) — the key unknown is the
+  extension-menu click on Fenix granting activeTab + executeScript.
+- AMO submission prep: replace the yt-sum placeholder icons FIRST (two listings
+  from the same publisher sharing an icon is confusing at best), one manual
+  real-LLM pass, listing copy. PRIVACY.md is current. Listed (not unlisted) is
+  the practical Android install path.
 - Maybe: re-snapshot control ("↻ page changed?"), per-tab conversation cache
   like yt-sum's summaryCache, context-menu "Ask about selection".

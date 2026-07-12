@@ -200,7 +200,7 @@ async function save() {
 
 async function reset() {
   await browser.storage.local.clear();
-  await browser.commands.reset(COMMAND).catch(() => {});
+  if (browser.commands) await browser.commands.reset(COMMAND).catch(() => {});
   await load();
   await loadShortcut();
   setStatus("Reset to defaults. Click Save to keep.", "");
@@ -213,6 +213,12 @@ async function reset() {
 const COMMAND = "_execute_browser_action";
 
 async function loadShortcut() {
+  // Firefox for Android has no commands API (and no keyboards to speak of);
+  // hide the whole control there instead of showing a dead field.
+  if (!browser.commands) {
+    $("shortcutField").style.display = "none";
+    return;
+  }
   try {
     const cmd = (await browser.commands.getAll()).find((c) => c.name === COMMAND);
     if (cmd) {
@@ -229,6 +235,7 @@ function syncShortcutSelect() {
 }
 
 async function applyShortcut() {
+  if (!browser.commands) return;
   const shortcut = $("shortcut").value.trim();
   if (!shortcut) {
     setStatus("Enter a shortcut first (e.g. Alt+Shift+K).", "err");
