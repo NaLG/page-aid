@@ -4,10 +4,16 @@
 // repeat clicks into a show/hide toggle that keeps the conversation.
 
 (() => {
-  if (window.__pageAid) {
-    window.__pageAid.toggle();
+  // Bump VERSION whenever panel behavior changes: extension reloads/updates
+  // don't clean up DOM already injected into open tabs, so a reinjection from
+  // a newer build must REBUILD an older build's panel, not re-show the zombie.
+  const VERSION = 2;
+  const existing = window.__pageAid;
+  if (existing && existing.version === VERSION) {
+    existing.toggle();
     return;
   }
+  document.getElementById("pageaid-panel")?.remove(); // stale panel from an older build
 
   // ---- page snapshot ---------------------------------------------------------
   // Taken once, at the click. innerText already skips scripts, styles, and
@@ -204,7 +210,10 @@
   // pill to the bottom-right corner. Live-updates from the options page.
   let collapseStyle = "inplace";
   browser.storage.local.get({ collapseStyle: "inplace" })
-    .then((s) => { collapseStyle = s.collapseStyle === "dock" ? "dock" : "inplace"; })
+    .then((s) => {
+      collapseStyle = s.collapseStyle === "dock" ? "dock" : "inplace";
+      console.log("[page-aid] collapseStyle:", collapseStyle); // diagnosable from devtools
+    })
     .catch(() => {});
   browser.storage.onChanged.addListener((ch, area) => {
     if (area === "local" && ch.collapseStyle)
@@ -380,6 +389,6 @@
   // fight the media query); desktop anchors immediately for natural resizing.
   if (window.innerWidth > 640) anchorLeftTop();
   input.focus();
-  window.__pageAid = { toggle };
-  console.log("[page-aid] panel injected on", location.href);
+  window.__pageAid = { toggle, version: VERSION };
+  console.log(`[page-aid] panel v${VERSION} injected on`, location.href);
 })();

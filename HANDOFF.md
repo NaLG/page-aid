@@ -13,7 +13,7 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 ## State
 
 - Skeleton complete; lints clean. End-to-end smoke test PASSES in real Firefox
-  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 30 assertions
+  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 32 assertions
   covering injection, <main> extraction (sentinel in the request, nav junk out),
   streaming markdown render, toggle guard, drag/collapse-in-place/resize-handle,
   plus PNG screenshots relayed to test/artifacts/ for visual review. The activeTab toolbar-click gesture is the
@@ -49,7 +49,11 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
   in the drag handler suppresses the native click, so the title toggle is
   re-synthesized from pointerup — any future clickable element on the bar must
   go through that path, and tests must use real pointer sequences, never
-  element.click(). Page-zoom behavior deliberately untouched: Firefox
+  element.click(). SECOND GOTCHA: extension reload/update does NOT clean up
+  panels already injected into open tabs — the window.__pageAid guard is
+  version-stamped (VERSION const in panel.js; BUMP IT whenever panel behavior
+  changes) so a newer injection rebuilds a stale panel instead of re-showing
+  it. Page-zoom behavior deliberately untouched: Firefox
   full-page zoom already scales the panel; owner may want em-sizing if he uses
   text-only zoom — awaiting his answer.
 

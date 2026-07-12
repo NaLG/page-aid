@@ -192,6 +192,23 @@ const checkSrc = `(() => {
   return { present: !!p, hidden: !!p && p.classList.contains('pageaid-hidden') };
 })()`;
 
+// Plants a fake guard from an "older build" (no matching version); the next
+// injection must rebuild the panel instead of driving the zombie's toggle.
+const zombiePrepSrc = `(() => {
+  document.getElementById('pageaid-panel')?.remove();
+  window.__pageAid = { toggle: () => { window.__zombieToggled = true; } };
+  return true;
+})()`;
+const rebuiltCheckSrc = `(() => {
+  const p = document.getElementById('pageaid-panel');
+  return {
+    version: window.__pageAid && window.__pageAid.version,
+    zombieToggled: !!window.__zombieToggled,
+    present: !!p,
+    visible: !!p && !p.classList.contains('pageaid-hidden'),
+  };
+})()`;
+
 // Drags the panel by its bar with synthetic pointer events, then collapses and
 // re-expands via the title, measuring that the panel moves and stays put.
 const dragSrc = `(async () => {
@@ -302,6 +319,8 @@ const DRIVE = ${JSON.stringify(driveSrc)};
 const CHECK = ${JSON.stringify(checkSrc)};
 const DRAG = ${JSON.stringify(dragSrc)};
 const DOCK = ${JSON.stringify(dockSrc)};
+const ZOMBIE_PREP = ${JSON.stringify(zombiePrepSrc)};
+const REBUILT_CHECK = ${JSON.stringify(rebuiltCheckSrc)};
 async function shot(tab, name) {
   try {
     const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: "png" });
@@ -339,7 +358,11 @@ async function shot(tab, name) {
     const [dock] = await browser.tabs.executeScript(tab.id, { code: DOCK });
     await sleep(200);
     await shot(tab, "3-dragged");
-    report({ final: true, ok: true, drive, afterHide, afterShow, drag, dock });
+    // Stale-build simulation: plant an unversioned guard, reinject, expect rebuild.
+    await browser.tabs.executeScript(tab.id, { code: ZOMBIE_PREP });
+    await browser.tabs.executeScript(tab.id, { file: "/content/panel.js" });
+    const [rebuilt] = await browser.tabs.executeScript(tab.id, { code: REBUILT_CHECK });
+    report({ final: true, ok: true, drive, afterHide, afterShow, drag, dock, rebuilt });
   } catch (e) {
     report({ final: true, ok: false, error: String(e) });
   }
@@ -420,6 +443,10 @@ check("second title press re-expands", g.expandedAgain);
 const k = result.dock || {};
 check("dock setting: title press docks pill to bottom-right", k.collapsed && k.dockBR, k);
 check("dock setting: expanding restores prior position", k.restored && k.expanded, k);
+
+const z = result.rebuilt || {};
+check("stale-build guard: reinjection rebuilds a fresh panel", typeof z.version === "number" && z.present && z.visible, z);
+check("stale-build guard: zombie toggle never driven", z.zombieToggled === false, z);
 
 for (const name of ["1-panel-open", "2-answer", "3-dragged"]) {
   const f = shots[name];

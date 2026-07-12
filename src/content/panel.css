@@ -94,6 +94,11 @@
   width: auto !important;
   min-width: 180px;
   min-height: 0 !important;
+  /* Tie-breakers against stale stylesheets from older injections (insertCSS
+     accumulates per tab; the newest sheet wins equal-specificity conflicts).
+     Dock mode still wins: it positions via inline styles. */
+  right: auto;
+  bottom: auto;
 }
 .pageaid-panel.pageaid-collapsed .pageaid-bar { border-bottom: none; }
 .pageaid-panel.pageaid-collapsed .pageaid-body,
