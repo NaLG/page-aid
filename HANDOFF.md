@@ -12,7 +12,13 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 
 ## State
 
-- Skeleton complete; lints clean. Not yet exercised in a real browser session.
+- Skeleton complete; lints clean. End-to-end smoke test PASSES in real Firefox
+  (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 19 assertions
+  covering injection, <main> extraction (sentinel in the request, nav junk out),
+  streaming markdown render, toggle guard, plus PNG screenshots relayed to
+  test/artifacts/ for visual review. The activeTab toolbar-click gesture is the
+  one path the harness can't drive (test build pre-grants <all_urls> instead) —
+  verify with one manual click.
 - Name DECIDED 2026-07-12: "Page Aid" (id `page-aid@nalg.dev`). Known close
   neighbors on AMO: "Page Assist" (~9k users) and "AI Page Assistant" — judged
   distinct enough; owner picked the name before finding Page Assist.
@@ -38,10 +44,11 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 
 ## Next
 
-- Real-browser smoke test: `npm run run:desktop`, panel on a heavy SPA, error
-  paths (no key; privileged page → badge flash), a localhost Ollama round trip.
+- Manual once-over (`npm run run:desktop`): toolbar click + Alt+Shift+A — the
+  real activeTab gesture — then a heavy SPA, the no-key error path, a privileged
+  page (badge flash), and one real-LLM round trip (localhost Ollama or a key).
 - Icons.
-- Decide whether Android is a target (yt-sum's gecko_android manifest block was
-  dropped; browser_action popup-less onClicked needs checking on Fenix).
+- Android: needs an Android emulator/SDK setup (none on this machine). Re-add a gecko_android block there
+  and check popup-less browserAction.onClicked behavior on Fenix.
 - Maybe: re-snapshot control ("↻ page changed?"), per-tab conversation cache
   like yt-sum's summaryCache, context-menu "Ask about selection".

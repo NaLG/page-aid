@@ -8,6 +8,7 @@
   "author": "nalg",
   "scripts": {
     "lint": "web-ext lint --source-dir src",
+    "test:smoke": "node test/smoke-panel.mjs",
     "run:desktop": "web-ext run --source-dir src --start-url 'https://en.wikipedia.org/wiki/Firefox'",
     "build": "web-ext build --source-dir src --artifacts-dir dist --overwrite-dest"
   },
