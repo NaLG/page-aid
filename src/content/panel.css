@@ -24,9 +24,10 @@
   min-height: 160px;
 }
 
-/* Invisible resize zones; the cursor is the affordance. */
+/* Invisible resize zones; the cursor is the affordance. No north midline —
+   the title bar's top edge stays grabbable for dragging; only the two upper
+   corners resize. */
 .pageaid-rz { position: absolute; }
-.pageaid-rz-n  { top: 0; left: 16px; right: 16px; height: 7px; cursor: ns-resize; }
 .pageaid-rz-s  { bottom: 0; left: 16px; right: 16px; height: 7px; cursor: ns-resize; }
 .pageaid-rz-e  { right: 0; top: 16px; bottom: 16px; width: 7px; cursor: ew-resize; }
 .pageaid-rz-w  { left: 0; top: 16px; bottom: 16px; width: 7px; cursor: ew-resize; }

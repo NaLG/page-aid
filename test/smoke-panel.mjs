@@ -224,7 +224,21 @@ const dragSrc = `(async () => {
   wz.dispatchEvent(new PointerEvent('pointerup', opts(wx - 100, wy)));
   await sleep(50);
   const w1 = panel.getBoundingClientRect();
+  // Hit-test the top strip: center must be the draggable bar, corners the
+  // resize zones (dispatching events on elements can't prove stacking; this can).
+  const hit = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return 'none';
+    const cls = String(el.className || '');
+    if (cls.indexOf('pageaid-rz') !== -1) return cls.replace('pageaid-rz ', '');
+    return el.closest && el.closest('.pageaid-bar') ? 'bar' : cls;
+  };
+  const rp = panel.getBoundingClientRect();
+  // +6 keeps the corner probes inside the 12px border-radius clip.
   return {
+    topCenter: hit(rp.left + rp.width / 2, rp.top + 3),
+    topLeft: hit(rp.left + 6, rp.top + 6),
+    topRight: hit(rp.right - 6, rp.top + 6),
     handles: panel.querySelectorAll('.pageaid-rz').length,
     anchored: !!panel.style.left,
     dx: Math.round(r1.left - r0.left),
@@ -352,7 +366,8 @@ check("toggle: third injection shows panel again", result.afterShow?.present && 
 
 const g = result.drag || {};
 check("desktop: panel anchored left/top for natural resize", g.anchored);
-check("8 resize zones present (corners + edge midlines)", g.handles === 8, g.handles);
+check("7 resize zones (no north midline — bar top is drag)", g.handles === 7, g.handles);
+check("hit-test: bar top-center drags, upper corners resize", g.topCenter === "bar" && /pageaid-rz-nw/.test(g.topLeft || "") && /pageaid-rz-ne/.test(g.topRight || ""), { topCenter: g.topCenter, topLeft: g.topLeft, topRight: g.topRight });
 check("west-edge resize grows leftward, right edge planted", Math.abs(g.resizeDw - 100) <= 10 && Math.abs(g.resizeDl - -100) <= 10 && g.resizeRightPlanted, { dw: g.resizeDw, dl: g.resizeDl });
 check("drag by bar moves panel (−140, +90)", Math.abs(g.dx - -140) <= 20 && Math.abs(g.dy - 90) <= 20, { dx: g.dx, dy: g.dy });
 check("drag does not trigger collapse; title click does", g.collapsed, g);

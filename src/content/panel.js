@@ -265,7 +265,9 @@
     e.preventDefault();
     e.stopPropagation();
   }
-  for (const zone of ["n", "s", "e", "w", "ne", "nw", "se", "sw"]) {
+  // No plain "n" zone: the bar's top edge belongs to dragging; the upper
+  // corners still resize.
+  for (const zone of ["s", "e", "w", "ne", "nw", "se", "sw"]) {
     const h = document.createElement("div");
     h.className = `pageaid-rz pageaid-rz-${zone}`;
     h.addEventListener("pointerdown", (e) => startResize(e, zone));
