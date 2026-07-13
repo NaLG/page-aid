@@ -23,8 +23,9 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
   neighbors on AMO: "Page Assist" (~9k users) and "AI Page Assistant" — judged
   distinct enough; owner picked the name before finding Page Assist.
 - Icons are yt-sum's, as placeholders.
-- No GitHub repo yet (`gh repo create` when ready). The directory on this
-  machine is still named `yt-sum`.
+- Repo: github.com/NaLG/page-aid (public, MIT). History was rewritten once
+  pre-publication (authorship + scrubbing); don't rebase past commits again.
+  The local working directory may still be named `yt-sum`.
 
 ## Architecture (what changed vs yt-sum)
 
