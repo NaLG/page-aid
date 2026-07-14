@@ -12,6 +12,12 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 
 ## State
 
+- SUBMITTED to AMO 2026-07-14: v0.1.0, LISTED channel, in the review queue
+  (yt-sum's review took a few days). Listing copy, reviewer notes, and field
+  values are in dist/LISTING-copy.md (local only; dist/ is gitignored).
+  PRIVACY.md as pasted is dated 2026-07-14. On approval: install from the AMO
+  listing on Firefox for Android = the Android on-device verification.
+
 - Skeleton complete; lints clean. End-to-end smoke test PASSES in real Firefox
   (`npm run test:smoke`): mock OpenAI SSE endpoint on localhost, 32 assertions
   covering injection, <main> extraction (sentinel in the request, nav junk out),
@@ -62,9 +68,13 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 
 ## Next
 
-- Manual once-over (`npm run run:desktop`): toolbar click + Alt+Shift+A — the
-  real activeTab gesture — then a heavy SPA, the no-key error path, a privileged
-  page (badge flash), and one real-LLM round trip (localhost Ollama or a key).
+- Await AMO review; check the developer hub for reviewer feedback. If changes
+  are requested, bump to 0.1.1 (a submitted version number can't be reused).
+- After approval: install on Firefox for Android from the listing and verify
+  the extension-menu click grants activeTab + injects (the one untested path);
+  check the bottom-sheet layout and touch drag.
+- Manual once-over on desktop (mostly done via daily use): heavy SPA, the
+  no-key error path, a privileged page (badge flash), one real-LLM round trip.
 - Android: static prep DONE (gecko_android strict_min_version 142; options page
   hides the shortcut control where browser.commands doesn't exist; badge-flash
   fallback already try/wrapped). Remaining: ON-DEVICE verification on an Android emulator (no SDK/adb on this machine) — the key unknown is the
