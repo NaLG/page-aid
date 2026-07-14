@@ -22,7 +22,9 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 - Name DECIDED 2026-07-12: "Page Aid" (id `page-aid@nalg.dev`). Known close
   neighbors on AMO: "Page Assist" (~9k users) and "AI Page Assistant" — judged
   distinct enough; owner picked the name before finding Page Assist.
-- Icons are yt-sum's, as placeholders.
+- Icons: real Page Aid logo (brown squircle, cream speech bubble, long-tail
+  variant "2a") shipped 2026-07-14 at 48/96/128/512, downscaled from the
+  owner's 1024px export with transparency intact.
 - Repo: github.com/NaLG/page-aid (public, MIT). History was rewritten once
   pre-publication (authorship + scrubbing); don't rebase past commits again.
   The local working directory may still be named `yt-sum`.
@@ -63,14 +65,12 @@ LLM key. Same BYOK engine as yt-sum (OpenAI-compatible + native Anthropic).
 - Manual once-over (`npm run run:desktop`): toolbar click + Alt+Shift+A — the
   real activeTab gesture — then a heavy SPA, the no-key error path, a privileged
   page (badge flash), and one real-LLM round trip (localhost Ollama or a key).
-- Icons.
 - Android: static prep DONE (gecko_android strict_min_version 142; options page
   hides the shortcut control where browser.commands doesn't exist; badge-flash
   fallback already try/wrapped). Remaining: ON-DEVICE verification on an Android emulator (no SDK/adb on this machine) — the key unknown is the
   extension-menu click on Fenix granting activeTab + executeScript.
-- AMO submission prep: replace the yt-sum placeholder icons FIRST (two listings
-  from the same publisher sharing an icon is confusing at best), one manual
-  real-LLM pass, listing copy. PRIVACY.md is current. Listed (not unlisted) is
-  the practical Android install path.
+- AMO submission prep: icons DONE. Remaining: one manual real-LLM pass and
+  listing copy. PRIVACY.md is current. Listed (not unlisted) is the practical
+  Android install path.
 - Maybe: re-snapshot control ("↻ page changed?"), per-tab conversation cache
   like yt-sum's summaryCache, context-menu "Ask about selection".
