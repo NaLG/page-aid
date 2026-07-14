@@ -1,6 +1,6 @@
 Page Aid Privacy Policy
 
-Last updated 2026-07-12. Publisher: nalg.
+Last updated 2026-07-14. Publisher: nalg.
 
 Short version: this extension has no servers and collects nothing for its developer. The only place your data goes is the LLM endpoint you configure.
 
